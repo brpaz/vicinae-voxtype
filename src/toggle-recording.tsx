@@ -1,18 +1,16 @@
-import { showToast, Toast } from '@vicinae/api';
+import { closeMainWindow, showHUD } from '@vicinae/api';
 import { toggleRecording } from './utils/voxtype';
 
 export default async function Command() {
+  // Close first so focus returns to the window that was active before
+  // Vicinae opened — voxtype types/pastes into the focused window.
+  await closeMainWindow();
   try {
     await toggleRecording();
-    await showToast({
-      style: Toast.Style.Success,
-      title: 'Voxtype recording toggled',
-    });
+    await showHUD('Voxtype recording toggled');
   } catch (err) {
-    await showToast({
-      style: Toast.Style.Failure,
-      title: 'Failed to toggle recording',
-      message: err instanceof Error ? err.message : String(err),
-    });
+    await showHUD(
+      `Failed to toggle recording — ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }

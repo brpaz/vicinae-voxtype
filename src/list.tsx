@@ -2,10 +2,10 @@ import {
   Action,
   ActionPanel,
   Color,
+  closeMainWindow,
   Icon,
   List,
-  showToast,
-  Toast,
+  showHUD,
 } from '@vicinae/api';
 import { useCallback, useEffect, useState } from 'react';
 import type { VoxtypeStatus } from './types';
@@ -54,19 +54,20 @@ export default function Command() {
 
   const run = useCallback(
     async (title: string, action: () => Promise<void>) => {
+      // Close first so focus returns to whatever window was active before
+      // Vicinae was opened — voxtype types/pastes into the focused window,
+      // which would otherwise be Vicinae itself.
+      await closeMainWindow();
       try {
         await action();
-        showToast({ style: Toast.Style.Success, title });
-        await refresh();
+        await showHUD(title);
       } catch (err) {
-        showToast({
-          style: Toast.Style.Failure,
-          title: `Failed: ${title}`,
-          message: err instanceof Error ? err.message : String(err),
-        });
+        await showHUD(
+          `Failed: ${title} — ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     },
-    [refresh]
+    []
   );
 
   if (error) {
