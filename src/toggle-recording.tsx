@@ -1,11 +1,16 @@
 import { closeMainWindow, showHUD } from '@vicinae/api';
-import { toggleRecording } from './utils/voxtype';
+import { getStatus, toggleRecording } from './utils/voxtype';
 
 export default async function Command() {
-  // Close first so focus returns to the window that was active before
-  // Vicinae opened — voxtype types/pastes into the focused window.
-  await closeMainWindow();
   try {
+    const status = await getStatus();
+    const willStop = status.class === 'recording';
+
+    // Only the transition into "stop" produces typed/pasted output, so only
+    // that one needs focus restored to the window active before Vicinae
+    // opened — voxtype types/pastes into the focused window.
+    if (willStop) await closeMainWindow();
+
     await toggleRecording();
     await showHUD('Voxtype recording toggled');
   } catch (err) {

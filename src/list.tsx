@@ -6,6 +6,8 @@ import {
   Icon,
   List,
   showHUD,
+  showToast,
+  Toast,
 } from '@vicinae/api';
 import { useCallback, useEffect, useState } from 'react';
 import type { VoxtypeStatus } from './types';
@@ -53,21 +55,37 @@ export default function Command() {
   }, [refresh]);
 
   const run = useCallback(
-    async (title: string, action: () => Promise<void>) => {
-      // Close first so focus returns to whatever window was active before
-      // Vicinae was opened — voxtype types/pastes into the focused window,
-      // which would otherwise be Vicinae itself.
-      await closeMainWindow();
+    async (title: string, action: () => Promise<void>, willStop: boolean) => {
+      // Only the transition into "stop" produces typed/pasted output, so
+      // only that one needs focus restored to the window that was active
+      // before Vicinae opened. Starting or cancelling has nothing to paste,
+      // so the launcher stays open for those (showHUD would close it too).
+      if (willStop) {
+        await closeMainWindow();
+        try {
+          await action();
+          await showHUD(title);
+        } catch (err) {
+          await showHUD(
+            `Failed: ${title} — ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
+        return;
+      }
+
       try {
         await action();
-        await showHUD(title);
+        await showToast({ style: Toast.Style.Success, title });
+        await refresh();
       } catch (err) {
-        await showHUD(
-          `Failed: ${title} — ${err instanceof Error ? err.message : String(err)}`
-        );
+        await showToast({
+          style: Toast.Style.Failure,
+          title: `Failed: ${title}`,
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
     },
-    []
+    [refresh]
   );
 
   if (error) {
@@ -115,27 +133,35 @@ export default function Command() {
                   <Action
                     title="Stop and Transcribe"
                     icon={Icon.StopFilled}
-                    onAction={() => run('Stopped recording', stopRecording)}
+                    onAction={() =>
+                      run('Stopped recording', stopRecording, true)
+                    }
                   />
                   <Action
                     title="Cancel Recording"
                     icon={Icon.XMarkCircle}
                     style="destructive"
-                    onAction={() => run('Recording cancelled', cancelRecording)}
+                    onAction={() =>
+                      run('Recording cancelled', cancelRecording, false)
+                    }
                   />
                 </>
               ) : (
                 <Action
                   title="Start Recording"
                   icon={Icon.Microphone}
-                  onAction={() => run('Recording started', startRecording)}
+                  onAction={() =>
+                    run('Recording started', startRecording, false)
+                  }
                 />
               )}
               <Action
                 title="Toggle Recording"
                 icon={Icon.Switch}
                 shortcut={{ modifiers: ['cmd'], key: 't' }}
-                onAction={() => run('Recording toggled', toggleRecording)}
+                onAction={() =>
+                  run('Recording toggled', toggleRecording, isRecording)
+                }
               />
               <Action
                 title="Refresh"
