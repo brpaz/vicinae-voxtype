@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vicinaehq/vicinae/refs/heads/main/extra/schemas/extension.json",
+  "name": "voxtype",
+  "title": "Voxtype",
+  "description": "Control the Voxtype push-to-talk voice-to-text daemon: start/stop/toggle recording and view live status",
+  "icon": "icon.png",
+  "author": "brpaz",
+  "license": "MIT",
+  "commands": [
+    {
+      "icon": "icon.png",
+      "name": "list",
+      "subtitle": "Voxtype",
+      "title": "Voxtype Status",
+      "description": "View recording state and start, stop or cancel it",
+      "mode": "view"
+    },
+    {
+      "icon": "icon.png",
+      "name": "toggle-recording",
+      "subtitle": "Voxtype",
+      "title": "Toggle Recording",
+      "description": "Instantly start or stop push-to-talk recording",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [],
+  "categories": [
+    "System"
+  ],
+  "dependencies": {
+    "@vicinae/api": "^0.28.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/react": "19.2.18",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "build": "vici build",
+    "dev": "vici develop",
+    "lint": "biome check src/ && vici lint",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
+    "check": "biome check --write ."
+  }
+}
